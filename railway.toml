@@ -1,8 +1,0 @@
-[deploy]
-numReplicas = 1
-restartPolicyType = "Always"
-restartPolicyMaxRetries = 10
-
-[web]
-port = 3000
-command = "npm run start-pm2"
