@@ -1,2 +1,2 @@
-[processes]
-web = "node server.js"
+[web]
+port = 3000
