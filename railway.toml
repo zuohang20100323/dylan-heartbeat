@@ -1,8 +1,0 @@
-[build]
-builder = "docker"
-dockerfilePath = "Dockerfile"
-
-[deploy]
-numReplicas = 1
-restartPolicyType = "Always"
-restartPolicyMaxRetries = 10
