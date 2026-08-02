@@ -24,6 +24,11 @@ const app = Fastify({
 
 app.register(require("@fastify/formbody"));
 
+// Root route — Railway health check requires /
+app.get("/", async (req, reply) => {
+  return { status: "ok", service: "kelivo-gateway" };
+});
+
 const PORT = Number(process.env.PORT) || 3000;
 const TARGET_API_URL = process.env.TARGET_API_URL;
 const TIME_ZONE = resolveTimeZone();
@@ -101,7 +106,8 @@ function normalizeContentToText(content) {
         return "";
       })
       .filter(Boolean);
-    return parts.join("\n");
+    return parts.join("
+");
   }
 
   if (isImageContentPart(content)) return "[图片]";
@@ -190,11 +196,11 @@ function escapeHtml(value) {
 
 function safeJsonForInlineScript(value) {
   return JSON.stringify(value)
-    .replace(/</g, "\\u003c")
-    .replace(/>/g, "\\u003e")
-    .replace(/&/g, "\\u0026")
-    .replace(/\u2028/g, "\\u2028")
-    .replace(/\u2029/g, "\\u2029");
+    .replace(/</g, "\u003c")
+    .replace(/>/g, "\u003e")
+    .replace(/&/g, "\u0026")
+    .replace(/\u2028/g, "\u2028")
+    .replace(/\u2029/g, "\u2029");
 }
 
 // ========================
@@ -221,7 +227,7 @@ function saveTimeline(messages) {
 // ========================
 function parseTimestampLabel(value) {
   const text = String(value || "");
-  const match = text.match(/（?\s*(\d{4})([-/])(\d{1,2})\2(\d{1,2})(?:[ T]?)(\d{1,2})[:：](\d{2})/);
+  const match = text.match(/（?\s*(\d{4})([-/])(\d{1,2})(\d{1,2})(?:[ T]?)(\d{1,2})[:：](\d{2})/);
   if (!match) return null;
   const [, yyyy, , month, day, hour, minute] = match;
   // 批注 2026-07-30：Kelivo 写进消息前缀的是用户配置时区的墙上时间；
@@ -400,7 +406,9 @@ function appendSpecialEvent(content) {
   timeline.push(newEvent);
   saveTimeline(timeline);
   // 批注 2026-07-15：特殊事件可能包含推送正文；日志只记录长度，避免公开部署时泄漏私密内容。
-  console.log(`\n已记录特殊事件 (position ${newEvent.position}, chars ${normalizeContentToText(content).length})\n`);
+  console.log(`
+已记录特殊事件 (position ${newEvent.position}, chars ${normalizeContentToText(content).length})
+`);
 }
 
 function stripPosition(messages) {
@@ -470,7 +478,8 @@ function loadEnvFileObject() {
   const result = {};
   try {
     const envContent = fs.readFileSync(ENV_FILE, "utf-8");
-    for (const line of envContent.split("\n")) {
+    for (const line of envContent.split("
+")) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) continue;
       const eqIndex = trimmed.indexOf("=");
@@ -484,7 +493,9 @@ function loadEnvFileObject() {
 }
 
 function serializeEnvValue(value) {
-  return String(value ?? "").replace(/\r?\n/g, "\\n");
+  return String(value ?? "").replace(/
+?
+/g, "\n");
 }
 
 function writeEnvUpdates(updates) {
@@ -496,7 +507,9 @@ function writeEnvUpdates(updates) {
       .sort()
   ];
   const lines = orderedKeys.map(key => `${key}=${serializeEnvValue(merged[key])}`);
-  fs.writeFileSync(ENV_FILE, lines.join("\n") + "\n");
+  fs.writeFileSync(ENV_FILE, lines.join("
+") + "
+");
 }
 
 function readRestartCommand() {
@@ -761,7 +774,8 @@ function readEnvValue(key) {
   if (IS_RAILWAY_RUNTIME && process.env[key]) return process.env[key];
   try {
     const envContent = fs.readFileSync(ENV_FILE, "utf-8");
-    const lines = envContent.split("\n");
+    const lines = envContent.split("
+");
     for (const line of lines) {
       const trimmed = line.trim();
       if (trimmed.startsWith(key + "=")) return trimmed.substring(key.length + 1).trim();
@@ -810,7 +824,7 @@ function readDiaryEntries(limit = 20) {
     // 批注 2026-07-15：管理页只读展示 wake-up 生成的本地日记；
     // 只读取 DIARY_DIR 下的 .md 文件，避免把任意路径内容暴露到 admin 页面。
     return fs.readdirSync(dir)
-      .filter(name => /^[^/\\]+\.md$/i.test(name))
+      .filter(name => /^[^/\]+\.md$/i.test(name))
       .sort((a, b) => b.localeCompare(a))
       .slice(0, limit)
       .map(name => {
@@ -1651,7 +1665,9 @@ app.post("/admin/save", { preHandler: basicAuth }, async (req, reply) => {
       ADMIN_USER: readEnvValue("ADMIN_USER"),
       ADMIN_PASSWORD: readEnvValue("ADMIN_PASSWORD")
     });
-    console.log("\n✅ .env 已更新，可通过管理页重启服务\n");
+    console.log("
+✅ .env 已更新，可通过管理页重启服务
+");
 
     if (wantsJsonResponse(req)) {
       return reply.send({ success: true });
