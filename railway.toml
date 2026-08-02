@@ -1,2 +1,11 @@
-[web]
-port = 3000
+[build]
+builder = "docker"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+numReplicas = 1
+restartPolicyType = "Always"
+restartPolicyMaxRetries = 10
+
+[processes]
+web = "pm2-runtime ecosystem.config.js"
