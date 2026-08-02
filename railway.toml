@@ -1,0 +1,6 @@
+[^deploy]–îtryPlications = 1
+restartPolicyType = "Always"
+restartPolicyMaxRetries = 10
+VÛweb]
+port = 3000
+command = "pm2-runtime ecosystem.config.js"
