@@ -7,5 +7,5 @@ numReplicas = 1
 restartPolicyType = "Always"
 restartPolicyMaxRetries = 10
 
-[processes]
-web = "pm2-runtime ecosystem.config.js"
+[web]
+port = 3000
