@@ -2,14 +2,11 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Install PM2
-RUN npm install -g pm2
-
 # Copy package files
-COPY package.json package-lock.json* ./
+COPY package.json ./
 
-# Install dependencies
-RUN npm install --omit=dev
+# Install dependencies (works with or without package-lock.json)
+RUN npm install --omit=dev || npm install
 
 # Copy source code
 COPY . .
@@ -17,5 +14,5 @@ COPY . .
 # Expose port (matches PORT=3000 in .env.example)
 EXPOSE 3000
 
-# Start both gateway and wake-up via PM2
-CMD ["pm2-runtime", "ecosystem.config.js"]
+# Start the gateway server
+CMD ["node", "server.js"]
