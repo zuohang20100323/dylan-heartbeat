@@ -515,8 +515,10 @@ app.addHook("onRequest", (req, reply, done) => {
   if (req.url.startsWith("/admin")) return done();
   // 批注 2026-07-15：公网部署常经过反代，真实公网请求可能在 Node 侧显示为 127/10 网段；
   // 所以 ALLOW_PUBLIC_API=true 后必须先验 /v1 的网关 key，避免被云平台内网 IP 绕过。
-  if (readBooleanEnv("ALLOW_PUBLIC_API", false) && req.url.startsWith("/v1/")) {
-    const configuredKey = readEnvValue("GATEWAY_API_KEY");
+  const configuredKey = readEnvValue("GATEWAY_API_KEY");
+  // 2026-08-03 部署修复：只要配置了 GATEWAY_API_KEY 即对 /v1/* 启用密钥验证，
+  // 避免 ALLOW_PUBLIC_API 环境变量未生效时公网请求被 403 拦截。
+  if (req.url.startsWith("/v1/") && (readBooleanEnv("ALLOW_PUBLIC_API", false) || configuredKey)) {
     if (!configuredKey) {
       reply.code(401).send({ error: "公网 /v1 已开启，但 GATEWAY_API_KEY 未配置" });
       return;
