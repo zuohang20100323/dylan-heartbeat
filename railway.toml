@@ -1,2 +1,6 @@
 [web]
 port = 3000
+healthcheck = "/"
+
+[deploy]
+restartPolicy = "always"
